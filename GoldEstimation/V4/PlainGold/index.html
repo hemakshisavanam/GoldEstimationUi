@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gold Estimator With Stone Weight</title>
+  <title>Gold Price Estimator</title>
 
   <style>
     * {
@@ -44,11 +44,25 @@
       margin-bottom: 30px;
     }
 
+    .rings-image {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      border: 5px solid #ffd700;
+      object-fit: cover;
+      margin-bottom: 14px;
+    }
+
     .title {
-      font-size: 2.4rem;
+      font-size: 2.5rem;
       background: linear-gradient(90deg, #ffd700, #ffec8b, #ffd700);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      margin-top: 6px;
+      opacity: 0.9;
     }
 
     .card {
@@ -67,10 +81,10 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 16px;
-      margin-bottom: 18px;
+      margin-bottom: 20px;
     }
 
-    label {
+    .input-field label {
       display: block;
       margin-bottom: 6px;
     }
@@ -78,15 +92,13 @@
     input,
     select {
       width: 100%;
-      padding: 12px;
+      padding: 12px 14px;
       border-radius: 10px;
       border: 1px solid rgba(255, 255, 255, 0.2);
       background: rgba(255, 255, 255, 0.1);
       color: white;
-    }
-
-    select option {
-      background: #2e0066;
+      font-size: 1rem;
+      outline: none;
     }
 
     .result {
@@ -108,7 +120,7 @@
     .total-row {
       display: flex;
       justify-content: space-between;
-      padding: 10px 0;
+      padding: 12px 0;
     }
 
     .total-row {
@@ -127,6 +139,11 @@
         grid-template-columns: 1fr;
       }
     }
+
+    select option {
+      background: #2e0066;
+      color: white;
+    }
   </style>
 </head>
 
@@ -137,29 +154,21 @@
   <div class="content">
 
     <div class="header">
-      <h1 class="title">🪙 Gold Estimation With Stones</h1>
-      <p>Stone weight excluded from gold & stone charges added</p>
+      <h1 class="title">🪙 Gold Price Calculation</h1>
+      <p class="subtitle">Instant gold value estimation (rate is live) </p>
     </div>
 
     <div class="card">
 
       <!-- INPUTS -->
       <div>
-
         <div class="input-row">
-          <div>
-            <label>Total Weight (grams)</label>
-            <input type="number" id="totalWeight" value="10">
+          <div class="input-field">
+            <label>Weight (grams)</label>
+            <input type="number" id="weight" value="10">
           </div>
 
-          <div>
-            <label>Stone Weight (grams)</label>
-            <input type="number" id="stoneWeight" value="1">
-          </div>
-        </div>
-
-        <div class="input-row">
-          <div>
+          <div class="input-field">
             <label>Purity</label>
             <select id="purity">
               <option value="0.916">22K (91.6%)</option>
@@ -168,96 +177,75 @@
               <option value="1">24K (100%)</option>
             </select>
           </div>
-
-          <div>
-            <label>Rate per Gram (₹)</label>
-            <input type="number" id="rate" value="6000">
-          </div>
         </div>
 
         <div class="input-row">
-          <div>
+          <div class="input-field">
+            <label>Rate per Gram (₹)</label>
+            <input type="number" id="rate" value="6000">
+          </div>
+
+          <div class="input-field">
             <label>Making Charges (%)</label>
             <input type="number" id="making" value="10">
           </div>
-
-          <div>
-            <label>Stone Charges (₹)</label>
-            <input type="number" id="stoneCharges" value="2000">
-          </div>
         </div>
-
       </div>
 
       <!-- RESULT -->
       <div class="result">
-
-        <div class="result-header">Estimation Result</div>
+        <div class="result-header"> Estimation Result </div>
 
         <div class="result-row">
-          <span>Net Gold Weight</span>
-          <span id="netWeight">0 g</span>
+          <span>🪙 Base Price</span>
+          <span id="basePrice">₹0</span>
         </div>
 
         <div class="result-row">
-          <span>Gold Price</span>
-          <span id="goldPrice">₹0</span>
-        </div>
-
-        <div class="result-row">
-          <span>Making Charges</span>
+          <span>⚙️ Making Charges</span>
           <span id="makingPrice">₹0</span>
         </div>
 
         <div class="result-row">
-          <span>Stone Charges</span>
-          <span id="stonePrice">₹0</span>
-        </div>
-
-        <div class="result-row">
-          <span>GST (3%)</span>
+          <span>🧾 GST (3%)</span>
           <span id="gstPrice">₹0</span>
         </div>
 
         <div class="total-row">
-          <span>Total Amount</span>
+          <span>Total</span>
           <span id="totalPrice">₹0</span>
         </div>
-
       </div>
 
     </div>
   </div>
 
+  <!-- JAVASCRIPT -->
   <script>
-    function calculate() {
-      const totalWeight = +document.getElementById("totalWeight").value;
-      const stoneWeight = +document.getElementById("stoneWeight").value;
+    function calculateGold() {
+      const weight = +document.getElementById("weight").value;
       const purity = +document.getElementById("purity").value;
       const rate = +document.getElementById("rate").value;
       const making = +document.getElementById("making").value;
-      const stoneCharges = +document.getElementById("stoneCharges").value;
 
-      const netWeight = Math.max(totalWeight - stoneWeight, 0);
-      const goldPrice = netWeight * rate * purity;
-      const makingCharge = goldPrice * making / 100;
-      const subTotal = goldPrice + makingCharge + stoneCharges;
-      const gst = subTotal * 0.03;
-      const total = subTotal + gst;
+      const base = weight * rate * purity;
+      const makingCharge = base * making / 100;
+      const gst = (base + makingCharge) * 0.03;
+      const total = base + makingCharge + gst;
 
-      document.getElementById("netWeight").innerText = netWeight.toFixed(2) + " g";
-      document.getElementById("goldPrice").innerText = "₹" + goldPrice.toFixed(0);
+      document.getElementById("basePrice").innerText = "₹" + base.toFixed(0);
       document.getElementById("makingPrice").innerText = "₹" + makingCharge.toFixed(0);
-      document.getElementById("stonePrice").innerText = "₹" + stoneCharges.toFixed(0);
       document.getElementById("gstPrice").innerText = "₹" + gst.toFixed(0);
       document.getElementById("totalPrice").innerText = "₹" + total.toFixed(0);
-    }
+    };
 
     document.querySelectorAll("input, select")
-      .forEach(el => el.addEventListener("input", calculate));
+      .forEach(el => el.addEventListener("input", calculateGold));
 
-    calculate();
+    calculateGold();
   </script>
+
+  <script src="./Js/Index/entryFile.js" type="module"></script>
 
 </body>
 
